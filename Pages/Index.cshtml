@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model IndexModel
 @{    
     ViewData["Title"] = "Home page";
@@ -6,9 +6,13 @@
 
 <div class="text-center">
     <h1 class="display-4">.NET 💜 Azure</h1>
-    <h1>@Model.Message</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
     <hr />
     <div>Host operating system: @Model.OSVersion</div>
+
+    <div>
+        <h2>Message:</h2>
+        <p>@Model.Message</p>
+    </div>
 </div>
 
