@@ -6,23 +6,37 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var host = CreateHostBuilder(args).Build();
+        var builder = WebApplication.CreateBuilder(args);
 
-        // Access the configuration instance
-        var configuration = host.Services.GetRequiredService<IConfiguration>();
+        // Get value from Azure configuration tab using key provided
+        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
 
-        // Now, you can retrieve specific application settings like this:
-        string environmentValue = configuration["APPSETTING_environment_stage"];
-        // Use the retrieved settings as needed
-        System.Console.WriteLine($"Environment value: {environmentValue}");
+        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
+        if (!string.IsNullOrEmpty(environmentValue))
+        {
+            builder.Configuration.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
+        }
 
-        host.Run();
+        // Build the web host
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.MapRazorPages();
+
+        app.Run();
     }
-
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
 }
