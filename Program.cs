@@ -1,20 +1,51 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 public class Program
 {
     public static void Main(string[] args)
     {
-        CreateHostBuilder(args).Build().Run();
-    }
+        var builder = WebApplication.CreateBuilder(args);
 
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
+        // Get value from Azure configuration tab using key provided
+        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
+
+        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
+        if (!string.IsNullOrEmpty(environmentValue))
+        {
+            builder.Configuration.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
+        }
+
+        // Set up detailed logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole(options => options.FormatterName = ConsoleFormatterNames.Systemd);
+
+        // Build the web host
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.MapRazorPages();
+
+        // Run the web host
+        app.Run();
+    }
 }
+
 
 
 
