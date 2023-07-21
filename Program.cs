@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 public class Program
@@ -11,25 +10,12 @@ public class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                var env = hostingContext.HostingEnvironment;
-                var envConfigFileName = $"appsettings.{env.EnvironmentName}.json";
-
-                // Load the initial configuration from appsettings.json
-                config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-                // Load the environment-specific configuration if it exists
-                config.AddJsonFile(envConfigFileName, optional: true, reloadOnChange: true);
-
-                // Load Azure environment variables (if deployed in Azure)
-                config.AddEnvironmentVariables(prefix: "APPSETTING_");
-            })
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
             });
 }
+
 
 
 
