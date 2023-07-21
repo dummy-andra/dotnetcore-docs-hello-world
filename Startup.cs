@@ -30,6 +30,20 @@ public class Startup
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        // Get value from Azure configuration tab using key provided
+        var environmentValue = Configuration["APPSETTING_environment_stage"];
+
+        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
+        if (!string.IsNullOrEmpty(environmentValue))
+        {
+            app.Use(async (context, next) =>
+            {
+                // Manually change the environment based on the configuration value
+                context.Request.Host = new HostString($"appsettings.{environmentValue}.json");
+                await next.Invoke();
+            });
+        }
+
         // Configure the middleware pipeline here. 
         // Other middleware configurations can be added here.
 
