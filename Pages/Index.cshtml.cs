@@ -25,7 +25,7 @@ namespace dotnetcoresample.Pages
             // Check if the environment_stage is "SIT" and set the message accordingly
             if (environmentStage == "SIT")
             {
-                Message = "Andra is cool 💜";
+                Message = "We are set to use SIT as environment💜";
             }
             else
             {
