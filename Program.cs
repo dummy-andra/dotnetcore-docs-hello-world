@@ -19,9 +19,7 @@ public class Program
 
         // Set up detailed logging
         builder.Logging.ClearProviders();
-        builder.Logging.AddConsole(options => options.IncludeScopes = true);
-        builder.Logging.AddDebug();
-        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole(options => options.FormatterName = ConsoleFormatterNames.Systemd);
 
         // Build the web host
         var app = builder.Build();
@@ -45,21 +43,8 @@ public class Program
 
         app.Run();
     }
-
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder
-                    .UseStartup<Startup>()
-                    .ConfigureLogging(logging =>
-                    {
-                        logging.ClearProviders();
-                        logging.AddConsole();
-                        logging.AddAzureWebAppDiagnostics();
-                    });
-            });
 }
+
 
 
 
