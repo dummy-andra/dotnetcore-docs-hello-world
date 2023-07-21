@@ -1,55 +1,39 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using System.IO;
 
 public class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = CreateHostBuilder(args);
 
-        // Access the Azure Web App Application Settings (environment_stage)
-        var environmentValue = builder.Configuration["environment_stage"];
+        // Get value from Azure configuration tab using key provided
+        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
 
-        builder.Services.AddRazorPages();
-
-        var app = builder.Build();
-
-        // Configure logging
-        ConfigureLogging(app, environmentValue);
-
-        // Configure the HTTP request pipeline.
-        if (!app.Environment.IsDevelopment())
+        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
+        if (!string.IsNullOrEmpty(environmentValue))
         {
-            app.UseExceptionHandler("/Error");
-            app.UseHsts();
+            builder.ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                config.SetBasePath(Directory.GetCurrentDirectory());
+                config.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
+            });
         }
 
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
-
-        app.UseRouting();
-
-        app.UseAuthorization();
-
-        app.MapRazorPages();
-
-        app.Run();
+        // Build and run the web host
+        builder.Build().Run();
     }
 
-    private static void ConfigureLogging(IApplicationBuilder app, string environmentValue)
-    {
-        // Set up logging to log the environmentValue
-        var loggerFactory = LoggerFactory.Create(builder =>
-        {
-            builder.AddConsole();
-        });
-
-        var logger = loggerFactory.CreateLogger<Program>();
-        logger.LogInformation($"Here is the variable value: {environmentValue}");
-    }
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Program>();
+            });
 }
+
 
 
 
