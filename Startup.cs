@@ -73,7 +73,20 @@ public class Startup
         });
         
         // Get the message from configuration
-        var message = Configuration["Message"];
+        // var message = Configuration["Message"];
+        // app.Run(async context =>
+        // {
+        //     await context.Response.WriteAsync(message);
+        // });
+        // Get the environment_stage value for logging
+        var environmentStage = _configuration["environment_stage"];
+        _logger.LogInformation("Current environment_stage: {EnvironmentStage}", environmentStage);
+    
+        // ...
+    
+        // Get the message from configuration
+        var message = _configuration["Message"];
+        _logger.LogInformation("Message: {Message}", message);
         app.Run(async context =>
         {
             await context.Response.WriteAsync(message);
