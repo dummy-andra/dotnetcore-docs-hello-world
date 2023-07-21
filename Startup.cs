@@ -2,13 +2,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 public class Startup
 {
-    public Startup(IConfiguration configuration)
+    private readonly IWebHostEnvironment _hostingEnvironment;
+
+    public Startup(IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
     {
         Configuration = configuration;
+        _hostingEnvironment = hostingEnvironment;
     }
 
     public IConfiguration Configuration { get; }
@@ -16,37 +18,34 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-        // Add any required services here.
-        // For example, if you want to use cookies-based authentication:
-        // services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-        //     .AddCookie();
+        // Get value from azure configuration tab using the key provided
+        var environmentValue = Configuration["APPSETTING_environment_stage"];
 
-        // Add the required authorization services.
-        services.AddAuthorization();
+        if (!string.IsNullOrEmpty(environmentValue))
+        {
+            // Create a new configuration object that uses the app.{environmentValue}.json file.
+            var configurationBuilder = new ConfigurationBuilder()
+                .SetBasePath(_hostingEnvironment.ContentRootPath)
+                .AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true)
+                .AddConfiguration(Configuration) // Preserve the original configuration
+                .AddEnvironmentVariables();
 
-        // Other service configurations and dependencies can be added here.
+            // Use this new configuration object to configure your ASP.NET Core application.
+            Configuration = configurationBuilder.Build();
+
+            services.AddSingleton(Configuration);
+        }
+
+        // Add other service configurations as needed...
+        // For example, you can use the original Configuration object for other service registrations.
+        // services.Configure<MyOptions>(Configuration.GetSection("MyOptions"));
+
+        // Register other services here...
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        // Get value from Azure configuration tab using key provided
-        var environmentValue = Configuration["APPSETTING_environment_stage"];
-
-        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
-        if (!string.IsNullOrEmpty(environmentValue))
-        {
-            app.Use(async (context, next) =>
-            {
-                // Manually change the environment based on the configuration value
-                context.Request.Host = new HostString($"appsettings.{environmentValue}.json");
-                await next.Invoke();
-            });
-        }
-
-        // Configure the middleware pipeline here. 
-        // Other middleware configurations can be added here.
-
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -62,12 +61,12 @@ public class Startup
 
         app.UseRouting();
 
-        // Use authentication and authorization middleware.
-        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapRazorPages();
 
-        // Additional middleware or endpoints can be added here.
+        app.Run();
+
+        // ... more code ...
     }
 }
