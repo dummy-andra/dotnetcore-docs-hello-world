@@ -1,38 +1,38 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using System.IO;
 
-public class Program
+namespace YourWebApiNamespace
 {
-    public static void Main(string[] args)
+    public class Program
     {
-        var builder = CreateHostBuilder(args);
-
-        // Get value from Azure configuration tab using key provided
-        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
-
-        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
-        if (!string.IsNullOrEmpty(environmentValue))
+        public static void Main(string[] args)
         {
-            builder.ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                config.SetBasePath(Directory.GetCurrentDirectory());
-                config.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
-            });
+            CreateHostBuilder(args).Build().Run();
         }
 
-        // Build and run the web host
-        builder.Build().Run();
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    var settings = config.Build();
+                    config.AddAzureAppConfiguration(options =>
+                    {
+                        // Connection string to the Azure App Configuration service.
+                        options.Connect(settings["ConnectionStrings:AppConfig"])
+                               .ConfigureKeyVault(kv =>
+                               {
+                                   kv.SetCredential(new DefaultAzureCredential());
+                               });
+                    });
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
-
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Program>();
-            });
 }
+
 
 
 
