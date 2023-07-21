@@ -16,6 +16,11 @@ public class Program
         {
             builder.Configuration.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
         }
+        // Set up detailed logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole(options => options.IncludeScopes = true);
+        builder.Logging.AddDebug();
+        builder.Logging.AddEventSourceLogger();
 
         // Build the web host
         var app = builder.Build();
