@@ -73,7 +73,7 @@ public class Startup
         });
         
         // Get the message from configuration
-        var message = _configuration["Message"];
+        var message = Configuration["Message"];
         app.Run(async context =>
         {
             await context.Response.WriteAsync(message);
