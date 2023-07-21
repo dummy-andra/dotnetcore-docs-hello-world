@@ -6,45 +6,32 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
-
-        // Get value from Azure configuration tab using key provided
-        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
-
-        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
-        if (!string.IsNullOrEmpty(environmentValue))
-        {
-            builder.Configuration.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
-        }
-
-        // Set up detailed logging
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole(options => options.FormatterName = ConsoleFormatterNames.Systemd);
-
-        // Build the web host
-        var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        if (!app.Environment.IsDevelopment())
-        {
-            app.UseExceptionHandler("/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios.
-            app.UseHsts();
-        }
-
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
-
-        app.UseRouting();
-
-        app.UseAuthorization();
-
-        app.MapRazorPages();
-
-        // Run the web host
-        app.Run();
+        var host = CreateHostBuilder(args).Build();
+        host.Run();
     }
+
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            })
+            .ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                var env = hostingContext.HostingEnvironment;
+                var envConfigFileName = $"appsettings.{env.EnvironmentName}.json";
+
+                // Load the initial configuration from appsettings.json
+                config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+                // Load the environment-specific configuration if it exists
+                config.AddJsonFile(envConfigFileName, optional: true, reloadOnChange: true);
+
+                // Load Azure environment variables (if deployed in Azure)
+                config.AddEnvironmentVariables(prefix: "APPSETTING_");
+            });
 }
+
 
 
 
