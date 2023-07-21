@@ -1,54 +1,48 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
 
-class Program
+public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        var host = new HostBuilder()
-            .ConfigureAppConfiguration((hostContext, config) =>
-            {
-                var settings = config.Build();
-                var connection = settings["ConnectionStrings:AppConfig"];
-                config.AddAzureAppConfiguration(options =>
-                {
-                    options.Connect(connection)
-                           .UseFeatureFlags();
-                });
+        var builder = WebApplication.CreateBuilder(args);
 
-                // Retrieve the "environment_stage" variable from Azure App Configuration
-                var environmentStage = settings["environment_stage"];
+        // Get value from Azure configuration tab using key provided
+        var environmentValue = builder.Configuration["APPSETTING_environment_stage"];
 
-                // Create a new configuration builder for SIT environment
-                var configurationBuilder = new ConfigurationBuilder()
-                    .AddJsonFile("appsettings.SIT.json", optional: true, reloadOnChange: true);
+        // Update the appsettings file used based on the environment_stage value (e.g., "SIT")
+        if (!string.IsNullOrEmpty(environmentValue))
+        {
+            builder.Configuration.AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true);
+        }
+        // Set up detailed logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole(options => options.IncludeScopes = true);
+        builder.Logging.AddDebug();
+        builder.Logging.AddEventSourceLogger();
 
-                // Set the "environment_stage" value in the new configuration builder
-                configurationBuilder.AddInMemoryCollection(new[]
-                {
-                    new KeyValuePair<string, string>("environment_stage", environmentStage)
-                });
+        // Build the web host
+        var app = builder.Build();
 
-                // Replace the original configuration with the new one that contains "environment_stage"
-                config.AddConfiguration(configurationBuilder.Build());
-            })
-            .ConfigureServices((hostContext, services) =>
-            {
-                // Add your services here, if any
-            })
-            .Build();
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios.
+            app.UseHsts();
+        }
 
-        // Now you can access configuration values using the host's Configuration property
-        var settingValue = host.Services.GetRequiredService<IConfiguration>()["SettingKey"];
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
 
-        Console.WriteLine($"SettingValue: {settingValue}");
+        app.UseRouting();
 
-        // Run any other logic or services you need here
+        app.UseAuthorization();
 
-        host.Run();
+        app.MapRazorPages();
+
+        app.Run();
     }
 }
 
