@@ -24,20 +24,23 @@ public class Startup
         if (!string.IsNullOrEmpty(environmentValue))
         {
             // Create a new configuration object that uses the app.{environmentValue}.json file.
-            var configurationBuilder = new ConfigurationBuilder()
+            var newConfiguration = new ConfigurationBuilder()
                 .SetBasePath(_hostingEnvironment.ContentRootPath)
                 .AddJsonFile($"appsettings.{environmentValue}.json", optional: false, reloadOnChange: true)
                 .AddConfiguration(Configuration) // Preserve the original configuration
-                .AddEnvironmentVariables();
+                .AddEnvironmentVariables()
+                .Build();
 
-            // Use this new configuration object to configure your ASP.NET Core application.
-            Configuration = configurationBuilder.Build();
-
+            services.AddSingleton(newConfiguration);
+        }
+        else
+        {
+            // Use the original configuration if APPSETTING_environment_stage is not set.
             services.AddSingleton(Configuration);
         }
 
         // Add other service configurations as needed...
-        // For example, you can use the original Configuration object for other service registrations.
+        // For example, you can use the Configuration object to configure other services:
         // services.Configure<MyOptions>(Configuration.GetSection("MyOptions"));
 
         // Register other services here...
