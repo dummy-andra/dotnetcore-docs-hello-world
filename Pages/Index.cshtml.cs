@@ -22,7 +22,7 @@ namespace dotnetcoresample.Pages
         {
             var environmentStage = _configuration["environment_stage"];
     
-            if (environmentStage == "SIT")
+            if (!string.IsNullOrEmpty(environmentStage))
             {
                 Message = _configuration["Message"];
             }
