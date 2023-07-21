@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using System.Runtime.InteropServices;
@@ -8,6 +7,7 @@ namespace dotnetcoresample.Pages
     public class IndexModel : PageModel
     {
         private readonly IConfiguration _configuration;
+
         public string OSVersion { get { return RuntimeInformation.OSDescription; } }
 
         public string Message { get; private set; }
@@ -29,11 +29,12 @@ namespace dotnetcoresample.Pages
             }
             else
             {
-                Message = ".NET 💜 Azure";
+                Message = "Hello, World!";
             }
         }
     }
 }
+
 
 
 
