@@ -10,8 +10,8 @@ In this example, we'll modify the application to dynamically load configuration 
 To achieve this, we'll make the following changes:
 
 In the Startup.cs file, modify the ConfigureServices method to load the appropriate configuration file based on the value of APPSETTING_environment_stage. If the variable is not set, it will use the default appsettings.json file.
-csharp
-Copy code
+
+```
 public void ConfigureServices(IServiceCollection services)
 {
     // Get value from azure configuration tab using the key provided
@@ -42,6 +42,7 @@ public void ConfigureServices(IServiceCollection services)
     // Register other services here...
     services.AddRazorPages();
 }
+```
 
 2. In the Index.cshtml.cs file, modify the OnGet method to read the value of environment_stage and set the appropriate message accordingly.
 ```
